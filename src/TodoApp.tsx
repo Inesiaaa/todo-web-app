@@ -2,10 +2,11 @@ import { useEffect, useState } from "react"
 import './TodoApp.css'
 
 interface Todo {
-  id: number
-  title: string
-  note: string
-  completed: boolean
+    id: number
+    title: string
+    note: string
+    completed: boolean
+    dateCreated?: Date
 }
 
 const STORAGE_KEY = 'todoApp.todos'
@@ -14,7 +15,14 @@ const THEME_STORAGE_KEY = 'todoApp.theme'
 const loadTodosFromStorage = (): Todo[] => {
     try {
         const storedTodo = localStorage.getItem(STORAGE_KEY)
-        return storedTodo ? JSON.parse(storedTodo) : []
+        if (storedTodo) {
+            const todos = JSON.parse(storedTodo)
+            return todos.map((todo: any) => ({
+                ...todo,
+                dateCreated: todo.dateCreated ? new Date(todo.dateCreated) : undefined
+            }))
+        }
+        return []
     } catch (error) {
         console.error('Failed to load todos from storage:', error)
         return []
@@ -37,6 +45,12 @@ function TodoApp() {
     const [isDarkTheme, setIsDarkTheme] = useState(() => {
         const savedTheme = localStorage.getItem(THEME_STORAGE_KEY)
         return savedTheme === 'dark'
+    })
+
+    const sortedTodos = [...todos].sort((a, b) => {
+        const dateA = a.dateCreated ? new Date(a.dateCreated).getTime() : 0
+        const dateB = b.dateCreated ? new Date(b.dateCreated).getTime() : 0
+        return dateB - dateA
     })
 
     useEffect(() => {
@@ -62,12 +76,13 @@ function TodoApp() {
                 id: Date.now(),
                 title: inputTitle,
                 note: inputNote,
-                completed: false
+                completed: false,
+                dateCreated: new Date()
             }
             setTodos([...todos, newTodo])
             setInputTitle('')
             setInputNote('')
-            setShowInputs(false) // Hide inputs after adding
+            setShowInputs(false)
         }
     }
 
@@ -120,9 +135,20 @@ function TodoApp() {
             </div>
 
             <div className="todo-grid">
-                {todos.map(todo => (
+                {sortedTodos.map(todo => (
                     <div key={todo.id} className={`todo-card ${todo.completed ? 'completed' : ''}`}>
                         <div className="todo-card-content">
+                            <label className="todo-date">
+                                {todo.dateCreated?.toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: '2-digit'
+                                })} {todo.dateCreated?.toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                })}
+                            </label>
                             <h3 className="todo-title" onClick={() => toggleTodo(todo.id)}>
                                 {todo.title}
                             </h3>
