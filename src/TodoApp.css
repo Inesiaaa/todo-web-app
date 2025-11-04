@@ -116,7 +116,7 @@ textarea, input {
     height: 28px;
     width: 28px;
     left: 4px;
-    bottom: 4px;
+    bottom: 3px;
     background-color: var(--button-text);
     transition: .4s;
     border-radius: 50%;
